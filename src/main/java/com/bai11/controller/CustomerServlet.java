@@ -1,6 +1,7 @@
 package com.bai11.controller;
 
 import com.bai11.model.Customer;
+import com.bai11.sevice.CustomerServicelmpl;
 import com.bai11.sevice.ICustomerService;
 
 import javax.servlet.RequestDispatcher;
@@ -14,7 +15,7 @@ import java.util.List;
 
 @WebServlet(name = "CustomerServlet",urlPatterns = "/customers")
 public class CustomerServlet extends HttpServlet {
-    private ICustomerService customerService= (ICustomerService) new CustomerServlet();
+    private ICustomerService customerService= new CustomerServicelmpl();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException{
         String action=request.getParameter("action");
@@ -30,6 +31,8 @@ public class CustomerServlet extends HttpServlet {
                 updateCustomer(request,response);
                 break;
             case "delete":
+                deleteCustomer(request,response);
+                showDeleteFrom(request,response);
                 break;
             default:
                 break;
@@ -91,16 +94,18 @@ public class CustomerServlet extends HttpServlet {
             case "edit":
                 showEditFrom(request,response);
                 break;
-            case "detele":
+            case "delete":
+                deleteCustomer(request,response);
                 break;
             case "view":
+                viewCustomer(request,response);
                 break;
             default:
                 listCustomers(request,response);
                 break;
         }
     }
-    private void showDelete(HttpServletRequest request,HttpServletResponse response){
+    private void showDeleteFrom(HttpServletRequest request,HttpServletResponse response){
         int id=Integer.parseInt(request.getParameter("id"));
         Customer customer=this.customerService.findById(id);
         RequestDispatcher dispatcher;
@@ -126,7 +131,7 @@ public class CustomerServlet extends HttpServlet {
         }else{
             this.customerService.remove(id);
             try{
-                response.sendRedirect("/customer");
+                response.sendRedirect("/customers");
             }catch (IOException e){
                 e.printStackTrace();
             }
@@ -162,10 +167,29 @@ public class CustomerServlet extends HttpServlet {
             e.printStackTrace();
         }
     }
+
     private void showCreateForm(HttpServletRequest request,HttpServletResponse response){
         RequestDispatcher dispatcher=request.getRequestDispatcher("customerCreate.jsp");
         try{
             dispatcher.forward(request,response);
+        }catch (ServletException e){
+            e.printStackTrace();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+    private void viewCustomer(HttpServletRequest request, HttpServletResponse response){
+        int id=Integer.parseInt(request.getParameter("id"));
+        Customer customer=this.customerService.findById(id);
+        RequestDispatcher dispatcher;
+        if(customer==null){
+            dispatcher=request.getRequestDispatcher("error-404.jsp");
+        }else{
+            request.setAttribute("customer",customer);
+            dispatcher=request.getRequestDispatcher("customerView.jsp");
+        }
+        try{
+           dispatcher.forward(request,response);
         }catch (ServletException e){
             e.printStackTrace();
         }catch (IOException e){
